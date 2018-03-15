@@ -9,6 +9,11 @@
 import Foundation
 import Cocoa
 
+public protocol LYTabViewDelegate: class {
+    func tabSelected(tab: NSTabViewItem)
+}
+
+
 /// Description
 public class LYTabView: NSView {
 
@@ -22,21 +27,14 @@ public class LYTabView: NSView {
     private let stackView: NSStackView = NSStackView(frame: .zero)
 
     /// delegate of LYTabView
-    public var delegate: NSTabViewDelegate? {
-        get {
-            return tabBarView.delegate
-        }
-        set(newDelegate) {
-            tabBarView.delegate = newDelegate
-        }
-    }
+    private var delegateArray: [LYTabViewDelegate] = []
 
     public var numberOfTabViewItems: Int { return self.tabView.numberOfTabViewItems }
     public var tabViewItems: [NSTabViewItem] { return self.tabView.tabViewItems }
     public var selectedTabViewItem: NSTabViewItem? { return self.tabView.selectedTabViewItem }
 
     final private func setupViews() {
-        tabView.delegate = tabBarView
+        tabView.delegate = self
         tabView.tabViewType = .noTabsNoBorder
         tabBarView.tabView = tabView
 
@@ -133,5 +131,23 @@ public extension LYTabView {
 
     public func takeSelectedTabViewItemFromSender(_ sender: AnyObject?) {
         self.tabView.takeSelectedTabViewItemFromSender(sender)
+    }
+    
+    public func setDelegate(newDelegate: LYTabViewDelegate) {
+        delegateArray.append(newDelegate)
+    }
+    
+    public func deleteDelegates() {
+        delegateArray = []
+    }
+}
+
+extension LYTabView: NSTabViewDelegate {
+    public func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+        if let notNilTabViewItem = tabViewItem {
+            for delegate in delegateArray {
+                delegate.tabSelected(tab: notNilTabViewItem)
+            }
+        }
     }
 }
